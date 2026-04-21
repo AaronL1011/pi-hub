@@ -1,6 +1,7 @@
+![Pi hub logo](./image.png)
 # pi hub
 
-Real-time dashboard and team extensions for [pi](https://github.com/mariozechner/pi-coding-agent) coding agent sessions.
+A real-time dashboard for [pi](https://github.com/mariozechner/pi-coding-agent) coding agent sessions.
 
 ![dashboard](https://img.shields.io/badge/port-7420-blue)
 
