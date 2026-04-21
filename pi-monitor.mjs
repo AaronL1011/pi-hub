@@ -799,6 +799,9 @@ const HTML = /*html*/ `<!DOCTYPE html>
   .card-model .terminal-badge { white-space:nowrap; width:min-content; }
   .card-activity { background:rgba(0,0,0,0.25); border-radius:6px; padding:10px 12px; margin-bottom:10px; font-size:12px; }
   .activity-label { color:var(--text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .copy-md-btn { position:absolute; top:6px; right:6px; background:var(--bg); border:1px solid var(--border); color:var(--text-dim); padding:2px 6px; border-radius:4px; font-size:10px; font-family:var(--font-mono); cursor:pointer; opacity:0; transition:opacity 0.15s; display:inline-flex; align-items:center; gap:3px; }
+  .card-activity:hover .copy-md-btn { opacity:1; }
+  .copy-md-btn:hover { border-color:var(--accent); color:var(--accent); }
   .activity-text { color:var(--text); font-size:12.5px; line-height:1.5; max-height:200px; overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; overscroll-behavior:contain; }
   .activity-text.error { color:var(--red); font-family:var(--font-mono); white-space:pre-wrap; word-break:break-all; }
   .activity-text.tool { color:var(--cyan); font-family:var(--font-mono); white-space:pre-wrap; word-break:break-all; }
@@ -808,6 +811,9 @@ const HTML = /*html*/ `<!DOCTYPE html>
   .activity-text pre { margin:6px 0; padding:8px 10px; background:rgba(0,0,0,0.3); border-radius:6px; overflow-x:auto; border:1px solid var(--border); }
   .activity-text pre code { background:none; padding:0; color:var(--text); font-size:11px; line-height:1.4; display:block; white-space:pre; }
   .activity-text pre { position:relative; }
+  .code-copy-btn { position:absolute; top:4px; right:4px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-dim); padding:2px 6px; border-radius:4px; font-size:10px; font-family:var(--font-mono); cursor:pointer; opacity:0; transition:opacity 0.15s; z-index:1; display:inline-flex; align-items:center; gap:3px; }
+  .activity-text pre:hover .code-copy-btn { opacity:1; }
+  .code-copy-btn:hover { border-color:var(--accent); color:var(--accent); }
   .activity-text pre code[class*="language-"]::after { position:absolute; top:4px; right:8px; font-size:9px; color:var(--text-dim); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.05em; opacity:0.6; pointer-events:none; }
   .activity-text pre code.language-js::after { content:'JS'; }
   .activity-text pre code.language-javascript::after { content:'JS'; }
@@ -880,7 +886,7 @@ const HTML = /*html*/ `<!DOCTYPE html>
   .btn.btn-focus .icon { display:inline-flex; align-items:center; }
   .btn.btn-focus:hover { background:rgba(63,185,80,0.1); }
   .btn.btn-copy:hover { background:rgba(88,166,255,0.1); }
-  .btn .icon { font-size:13px; }
+  .btn .icon { font-size:13px; display:inline-flex; align-items:center; }
 
   .toast { position:fixed; bottom:20px; right:20px; background:var(--bg-card); border:1px solid var(--green); color:var(--green); padding:10px 16px; border-radius:8px; font-size:13px; font-family:var(--font-mono); opacity:0; transform:translateY(10px); transition:all 0.3s; z-index:200; pointer-events:none; }
   .toast.show { opacity:1; transform:translateY(0); }
@@ -997,6 +1003,41 @@ function copySessionPath(filePath) {
     () => showToast("Session path copied"),
     () => showToast("Copy failed")
   );
+}
+
+const COPY_ICON = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 256 256"><path d="M180,64H40A12,12,0,0,0,28,76V216a12,12,0,0,0,12,12H180a12,12,0,0,0,12-12V76A12,12,0,0,0,180,64ZM168,204H52V88H168ZM228,40V180a12,12,0,0,1-24,0V52H76a12,12,0,0,1,0-24H216A12,12,0,0,1,228,40Z"></path></svg>';
+
+function copyCodeBlock(btn) {
+  const pre = btn.closest('pre');
+  if (!pre) return;
+  const code = pre.querySelector('code');
+  const text = (code || pre).textContent;
+  navigator.clipboard.writeText(text).then(
+    () => { btn.textContent = '✓'; setTimeout(() => btn.innerHTML = COPY_ICON, 1200); },
+    () => showToast('Copy failed')
+  );
+}
+
+function addCodeCopyButtons(container) {
+  if (!container) return;
+  for (const pre of container.querySelectorAll('.activity-text pre')) {
+    if (pre.querySelector('.code-copy-btn')) continue;
+    const btn = document.createElement('button');
+    btn.className = 'code-copy-btn';
+    btn.innerHTML = COPY_ICON;
+    btn.onclick = (e) => { e.stopPropagation(); copyCodeBlock(btn); };
+    pre.appendChild(btn);
+  }
+}
+
+function copyLastResponse(sessionId) {
+  const session = sessionsById.get(sessionId);
+  if (session?.lastAssistantText) {
+    navigator.clipboard.writeText(session.lastAssistantText).then(
+      () => showToast("Markdown copied to clipboard"),
+      () => showToast("Copy failed")
+    );
+  }
 }
 
 function showToast(msg) {
@@ -1137,6 +1178,7 @@ function renderSessionGrid() {
   if (active.length) { h += '<div class="section-title">Active Sessions <span class="badge">'+active.length+'</span></div><div class="session-grid" id="grid-active">'+active.map(cardHtml).join("")+'</div>'; }
   if (recent.length) { h += '<div class="section-title">Recent Sessions <span class="badge">'+recent.length+'</span></div><div class="session-grid" id="grid-recent">'+recent.map(cardHtml).join("")+'</div>'; }
   c.innerHTML = h;
+  addCodeCopyButtons(c);
 }
 
 function patchCard(s) {
@@ -1147,6 +1189,7 @@ function patchCard(s) {
   if ((isAct && gid==="grid-recent") || (!isAct && gid==="grid-active")) { fullRender(); return; }
   el.className = "session-card status-"+s.status+" just-updated";
   el.innerHTML = cardInner(s);
+  addCodeCopyButtons(el);
   setTimeout(() => el.classList.remove("just-updated"), 600);
 }
 
@@ -1161,7 +1204,7 @@ function cardInner(s) {
   } else if (s.lastAssistantText) {
     const rendered = renderMd(s.lastAssistantText);
     const needsCollapse = s.lastAssistantText.length > 400 || (s.lastAssistantText.match(/\\n/g)||[]).length > 8;
-    act = '<div class="card-activity"><div class="activity-label">Last Response</div><div class="activity-text' + (needsCollapse ? ' collapsed" data-expandable="true' : '') + '">' + rendered + '</div>' + (needsCollapse ? '<button class="activity-expand" onclick="toggleExpand(this)">▼ Show more</button>' : '') + '</div>';
+    act = '<div class="card-activity" style="position:relative"><div class="activity-label">Last Response</div><button class="copy-md-btn" onclick="event.stopPropagation();copyLastResponse(\\''+s.id+'\\')">' + COPY_ICON + ' md</button><div class="activity-text' + (needsCollapse ? ' collapsed" data-expandable="true' : '') + '">' + rendered + '</div>' + (needsCollapse ? '<button class="activity-expand" onclick="toggleExpand(this)">▼ Show more</button>' : '') + '</div>';
   } else if (s.lastToolCall) {
     act = '<div class="card-activity"><div class="activity-label">Last Tool Call</div><div class="activity-text">' + renderToolCall(s.lastToolCall) + '</div></div>';
   } else if (s.lastUserMessage) {
@@ -1176,8 +1219,8 @@ function cardInner(s) {
   const hasTerm = s.terminalWindow;
   let btns =
     (hasTerm ? '<button class="btn btn-focus" onclick="event.stopPropagation();focusTerminal(\\''+s.id+'\\')"><span class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256"><path d="M251,123.13c-.37-.81-9.13-20.26-28.48-39.61C196.63,57.67,164,44,128,44S59.37,57.67,33.51,83.52C14.16,102.87,5.4,122.32,5,123.13a12.08,12.08,0,0,0,0,9.75c.37.82,9.13,20.26,28.49,39.61C59.37,198.34,92,212,128,212s68.63-13.66,94.48-39.51c19.36-19.35,28.12-38.79,28.49-39.61A12.08,12.08,0,0,0,251,123.13Zm-46.06,33C183.47,177.27,157.59,188,128,188s-55.47-10.73-76.91-31.88A130.36,130.36,0,0,1,29.52,128,130.45,130.45,0,0,1,51.09,99.89C72.54,78.73,98.41,68,128,68s55.46,10.73,76.91,31.89A130.36,130.36,0,0,1,226.48,128,130.45,130.45,0,0,1,204.91,156.12ZM128,84a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,84Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,148Z"></path></svg></span> Focus Terminal</button>' : '') +
-    '<button class="btn btn-copy" onclick="event.stopPropagation();copyResumeCmd(\\''+esc(s.filePath)+'\\')"><span class="icon">⎘</span> Resume Cmd</button>' +
-    '<button class="btn" onclick="event.stopPropagation();copySessionPath(\\''+esc(s.filePath)+'\\')"><span class="icon">📋</span> Path</button>';
+    '<button class="btn btn-copy" onclick="event.stopPropagation();copyResumeCmd(\\''+esc(s.filePath)+'\\')"><span class="icon">' + COPY_ICON + '</span> Resume Cmd</button>' +
+    '<button class="btn" onclick="event.stopPropagation();copySessionPath(\\''+esc(s.filePath)+'\\')"><span class="icon">' + COPY_ICON + '</span> Path</button>';
 
   return '<div class="card-header"><div>'+
     '<div class="card-project" title="'+esc(s.cwd||s.projectPath)+'">'+esc(shortPath(s.projectPath))+'</div>'+
