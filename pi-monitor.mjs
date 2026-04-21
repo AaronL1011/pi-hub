@@ -86,7 +86,7 @@ function processEntry(entry, session) {
     }
     if (Array.isArray(msg.content)) {
       for (const block of msg.content) {
-        if (block.type === "text") session.lastAssistantText = block.text.slice(0, 2000);
+        if (block.type === "text") session.lastAssistantText = block.text;
         if (block.type === "toolCall") {
           session.toolCalls++;
           session.lastToolCall = { name: block.name, args: summarizeArgs(block.arguments) };
