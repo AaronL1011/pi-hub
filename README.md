@@ -43,60 +43,6 @@ Reload running pi sessions to pick up the new extension:
 /reload
 ```
 
-## S.P.E.C Extension
-
-The S.P.E.C (Simultaneous Project Execution Cycles) extension enforces a human-critical, agent-execution workflow. Humans stay as the thinking layer, agents act as the execution layer.
-
-> "Cheap code raises the premium on system understanding." — [aaronlewis.blog/posts/spec](https://aaronlewis.blog/posts/spec)
-
-### Install
-
-```bash
-# symlink both files into global extensions
-ln -s "$(pwd)/pi-spec-extension.ts" ~/.pi/agent/extensions/pi-spec.ts
-ln -s "$(pwd)/pi-spec-utils.ts" ~/.pi/agent/extensions/pi-spec-utils.ts
-```
-
-Reload running sessions: `/reload`
-
-### Workflow
-
-```
-┌─────────┐     ┌────────┐     ┌─────────┐     ┌────────────┐
-│  SPEC   │────▶│ REVIEW │────▶│ EXECUTE │────▶│ HUMAN      │
-│ (draft) │     │(human) │     │ (agent) │     │ PR REVIEW  │
-└─────────┘     └────────┘     └─────────┘     └────────────┘
-  read-only      read-only      full access      (external)
-```
-
-| Phase | Agent Access | What Happens |
-|-------|-------------|---------------|
-| **Spec** | Read-only | Agent explores codebase, suggests SPEC.md content. Human decides. |
-| **Review** | Read-only | Human challenges the plan. Agent answers questions, highlights risks. |
-| **Execute** | Full access | Agent implements slices from the approved spec. Progress tracked. |
-| **Idle** | Full access | Normal pi usage, no active spec. |
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `/spec new [path]` | Create SPEC.md from template, enter spec phase |
-| `/spec load <path>` | Load existing SPEC.md, enter review phase |
-| `/spec phase <name>` | Switch to `spec` \| `review` \| `execute` \| `idle` |
-| `/spec status` | Show current phase, spec file, slice progress |
-| `/spec log` | Show decision log |
-| `/spec escape` | Abandon current spec (escape hatch) |
-| `Ctrl+Alt+S` | Cycle through phases |
-
-### How it works
-
-- **Phase-gated tools** — `write`, `edit`, and destructive bash commands are blocked during spec/review
-- **SPEC.md template** — Structured sections: problem, user stories, architecture, implementation slices, acceptance criteria, decision log, escape hatch
-- **Slice tracking** — Extracts numbered items from `## Implementation Slices`, tracks `[DONE:n]` markers, shows progress widget
-- **Human review gate** — Skipping review triggers a confirmation warning
-- **Review prompts** — After each agent response in review, choose: continue reviewing, approve for execution, go back to design, or escape
-- **Session persistence** — State survives session restarts
-
 ## PR Review Extension
 
 Load a pull request into context and get an AI-powered initial review summary, then ask follow-up questions about the changes.
@@ -230,8 +176,6 @@ journalctl --user -u pi-hub -f
 |------|--------|
 | `pi-monitor.mjs` | Dashboard server (file watcher + SSE + web UI) |
 | `pi-hub-extension.ts` | pi extension: real-time lifecycle events to dashboard |
-| `pi-spec-extension.ts` | pi extension: S.P.E.C workflow enforcement |
-| `pi-spec-utils.ts` | Pure utilities for the spec extension |
 | `pi-review-extension.ts` | pi extension: `/review <PR>` — load PR diff into context |
 | `pi-pr-review-extension.ts` | pi extension: `/pr-review` — interactive comment thread wizard |
 | `start.sh` / `stop.sh` / `restart.sh` | Dashboard process management |
