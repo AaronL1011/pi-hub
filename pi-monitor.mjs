@@ -99,7 +99,7 @@ function processEntry(entry, session) {
 
   if (msg.role === "toolResult") {
     const text = Array.isArray(msg.content) ? msg.content.filter(b => b.type === "text").map(b => b.text).join("") : "";
-    session.lastToolResult = { toolName: msg.toolName, isError: msg.isError, preview: text.slice(0, 300) };
+    session.lastToolResult = { toolName: msg.toolName, isError: msg.isError, text };
   }
 }
 
@@ -802,7 +802,7 @@ const HTML = /*html*/ `<!DOCTYPE html>
   .copy-md-btn { position:absolute; top:6px; right:6px; background:var(--bg); border:1px solid var(--border); color:var(--text-dim); padding:2px 6px; border-radius:4px; font-size:10px; font-family:var(--font-mono); cursor:pointer; opacity:0; transition:opacity 0.15s; display:inline-flex; align-items:center; gap:3px; }
   .card-activity:hover .copy-md-btn { opacity:1; }
   .copy-md-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .activity-text { color:var(--text); font-size:12.5px; line-height:1.5; max-height:200px; overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; overscroll-behavior:contain; }
+  .activity-text { color:var(--text); font-size:12.5px; line-height:1.5; overflow-x:hidden; }
   .activity-text.error { color:var(--red); font-family:var(--font-mono); white-space:pre-wrap; word-break:break-all; }
   .activity-text.tool { color:var(--cyan); font-family:var(--font-mono); white-space:pre-wrap; word-break:break-all; }
   .activity-text p { margin:0 0 8px 0; }
@@ -1213,7 +1213,8 @@ function cardInner(s) {
   if (s.lastToolResult && !s.lastErrorMessage) {
     const badge = s.lastToolResult.isError ? '<span class="tool-result-badge error">ERROR</span>' : '<span class="tool-result-badge success">OK</span>';
     const toolName = s.lastToolResult.toolName ? '<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim)">' + esc(s.lastToolResult.toolName) + '</span> ' : '';
-    act += '<div class="card-activity" style="margin-top:6px"><div class="activity-label">Last Tool Result ' + toolName + badge + '</div><div class="activity-text tool" style="max-height:80px">'+esc(s.lastToolResult.preview)+'</div></div>';
+    const trText = s.lastToolResult.text || '';
+    act += '<div class="card-activity" style="margin-top:6px"><div class="activity-label">Last Tool Result ' + toolName + badge + '</div><div class="activity-text tool" style="max-height:120px;overflow-y:auto">' + esc(trText) + '</div></div>';
   }
 
   const hasTerm = s.terminalWindow;
