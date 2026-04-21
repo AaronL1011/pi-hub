@@ -2,7 +2,7 @@
 /**
  * Pi Agent Monitor — real-time dashboard for all pi coding agent sessions.
  *
- * Usage:  node pi-monitor.mjs [port]
+ * Usage:  node pi-hub.mjs [port]
  *         Default port: 7420
  *
  * Architecture:

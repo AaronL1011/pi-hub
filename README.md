@@ -130,8 +130,8 @@ xdg-open http://localhost:7420
 Or run directly:
 
 ```bash
-node pi-monitor.mjs        # default port 7420
-node pi-monitor.mjs 8080   # custom port
+node pi-hub.mjs        # default port 7420
+node pi-hub.mjs 8080   # custom port
 ```
 
 ## systemd service
@@ -145,7 +145,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/node %h/code/pi-hub/pi-monitor.mjs
+ExecStart=/usr/bin/node %h/code/pi-hub/pi-hub.mjs
 Restart=on-failure
 RestartSec=5
 
@@ -174,7 +174,7 @@ journalctl --user -u pi-hub -f
 
 | File | Purpose |
 |------|--------|
-| `pi-monitor.mjs` | Dashboard server (file watcher + SSE + web UI) |
+| `pi-hub.mjs` | Dashboard server (file watcher + SSE + web UI) |
 | `pi-hub-extension.ts` | pi extension: real-time lifecycle events to dashboard |
 | `pi-review-extension.ts` | pi extension: `/review <PR>` — load PR diff into context |
 | `pi-pr-review-extension.ts` | pi extension: `/pr-review` — interactive comment thread wizard |
